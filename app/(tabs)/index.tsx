@@ -1,13 +1,45 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { Alert, Button, Platform, StyleSheet, View } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'expo-router';
 
 export default function HomeScreen() {
+  const { user, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('Home screen: User is authenticated');
+      console.log('User data:', {
+        id: user.id,
+        email: user.email,
+        username: user.preferred_username,
+        name: user.name,
+      });
+    }
+  }, [isAuthenticated, user]);
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -21,6 +53,15 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+      {user && (
+        <ThemedView style={styles.userContainer}>
+          <ThemedText type="subtitle">Signed in as:</ThemedText>
+          <ThemedText>{user.email || user.preferred_username || user.name || 'User'}</ThemedText>
+          <View style={styles.logoutButton}>
+            <Button title="Sign Out" onPress={handleLogout} color="#ff3b30" />
+          </View>
+        </ThemedView>
+      )}
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
@@ -83,6 +124,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  userContainer: {
+    gap: 8,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  logoutButton: {
+    marginTop: 8,
   },
   stepContainer: {
     gap: 8,
