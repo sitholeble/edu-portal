@@ -5,6 +5,9 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { CalendarProvider } from '@/contexts/CalendarContext';
+import { FamilyProvider } from '@/contexts/FamilyContext';
+import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -13,28 +16,38 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (authLoading || onboardingLoading) return;
 
     const inAuthGroup = segments[0] === 'login';
+    const inOnboardingGroup = segments[0] === 'onboarding';
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to home if authenticated and on login screen
+      // Check if onboarding is needed
+      if (!isOnboardingComplete && !inOnboardingGroup) {
+        router.replace('/onboarding');
+      } else if (isOnboardingComplete && !inOnboardingGroup) {
+        router.replace('/(tabs)');
+      }
+    } else if (isAuthenticated && isOnboardingComplete && inOnboardingGroup) {
+      // If onboarding is complete but user is on onboarding screen, redirect to home
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, authLoading, isOnboardingComplete, onboardingLoading, segments]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
@@ -46,7 +59,13 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <OnboardingProvider>
+        <FamilyProvider>
+          <CalendarProvider>
+            <RootLayoutNav />
+          </CalendarProvider>
+        </FamilyProvider>
+      </OnboardingProvider>
     </AuthProvider>
   );
 }
