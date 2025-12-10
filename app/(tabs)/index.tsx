@@ -1,16 +1,19 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, Button, Platform, StyleSheet, View } from 'react-native';
+import { Alert, Button, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'expo-router';
+import { useFamily } from '@/contexts/FamilyContext';
 
 export default function HomeScreen() {
   const { user, logout, isAuthenticated } = useAuth();
+  const { familyMembers } = useFamily();
+  const router = useRouter();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -58,62 +61,44 @@ export default function HomeScreen() {
           <ThemedText type="subtitle">Signed in as:</ThemedText>
           <ThemedText>{user.email || user.preferred_username || user.name || 'User'}</ThemedText>
           <View style={styles.logoutButton}>
-            <Button title="Sign Out" onPress={handleLogout} color="#ff3b30" />
+            <Button title="Sign Out" onPress={handleLogout} color="#888" />
           </View>
         </ThemedView>
       )}
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+      <ThemedView style={styles.familyContainer}>
+        <View style={styles.familyHeader}>
+          <ThemedText type="subtitle">Family Members</ThemedText>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/family')}>
+            <ThemedText style={styles.manageLink}>Manage</ThemedText>
+          </TouchableOpacity>
+        </View>
+        {familyMembers.length > 0 ? (
+          <FlatList
+            data={familyMembers}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <ThemedView style={styles.familyCard}>
+                <ThemedText type="defaultSemiBold" style={styles.familyName}>
+                  {item.name}
+                </ThemedText>
+                <ThemedText style={styles.familyRelationship}>{item.relationship}</ThemedText>
+                {item.age && <ThemedText style={styles.familyAge}>Age: {item.age}</ThemedText>}
+              </ThemedView>
+            )}
+            contentContainerStyle={styles.familyList}
+          />
+        ) : (
+          <ThemedView style={styles.emptyFamily}>
+            <ThemedText style={styles.emptyFamilyText}>No family members yet</ThemedText>
+            <Button
+              title="Add Family Member"
+              onPress={() => router.push('/(tabs)/family')}
+            />
+          </ThemedView>
+        )}
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -135,9 +120,52 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginTop: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  familyContainer: {
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  familyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  manageLink: {
+    color: '#888',
+    fontWeight: '600',
+  },
+  familyList: {
+    gap: 12,
+  },
+  familyCard: {
+    padding: 12,
+    marginRight: 12,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    minWidth: 120,
+  },
+  familyName: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  familyRelationship: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginBottom: 2,
+  },
+  familyAge: {
+    fontSize: 11,
+    opacity: 0.6,
+  },
+  emptyFamily: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyFamilyText: {
+    marginBottom: 12,
+    opacity: 0.7,
   },
   reactLogo: {
     height: 178,
