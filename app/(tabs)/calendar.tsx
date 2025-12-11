@@ -82,13 +82,24 @@ export default function CalendarScreen() {
       return;
     }
 
+    const formatDateForSave = (dateStr: string, timeStr?: string) => {
+      if (!dateStr) return undefined;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr; 
+      }
+      if (timeStr) {
+        if (/^\d{2}:\d{2}$/.test(timeStr)) {
+          return `${dateStr}T${timeStr}:00`;
+        }
+      }
+      return dateStr;
+    };
+
     const eventData = {
       title: formData.title,
       description: formData.description || undefined,
-      startDate: `${formData.startDate}${formData.startTime ? `T${formData.startTime}:00` : ''}`,
-      endDate: formData.endDate
-        ? `${formData.endDate}${formData.endTime ? `T${formData.endTime}:00` : ''}`
-        : undefined,
+      startDate: formatDateForSave(formData.startDate, formData.startTime) || formData.startDate,
+      endDate: formData.endDate ? formatDateForSave(formData.endDate, formData.endTime) : undefined,
       startTime: formData.startTime || undefined,
       endTime: formData.endTime || undefined,
       familyMemberId: formData.familyMemberId || undefined,
@@ -127,7 +138,19 @@ export default function CalendarScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    if (!dateString) return 'Invalid Date';
+    
+    let date: Date;
+    if (dateString.includes('T')) {
+      date = new Date(dateString);
+    } else {
+      date = new Date(dateString + 'T00:00:00');
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -423,6 +446,7 @@ export default function CalendarScreen() {
                       }
                     }
                   }}
+                  color="#888"
                 />
               </View>
 
@@ -449,7 +473,7 @@ export default function CalendarScreen() {
                   setIsModalVisible(false);
                   resetForm();
                 }} color="#999" />
-                <Button title="Save" onPress={handleSave} />
+                <Button title="Save" onPress={handleSave} color="#888" />
               </View>
             </ScrollView>
           </ThemedView>
@@ -518,7 +542,7 @@ const styles = StyleSheet.create({
     padding: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#888',
   },
   actionText: {
     color: '#fff',
@@ -526,7 +550,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#ff3b30',
+    backgroundColor: '#888',
   },
   deleteText: {
     color: '#fff',

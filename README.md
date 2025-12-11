@@ -98,6 +98,59 @@ The Keycloak configuration is in `constants/keycloak.ts`:
 - **Realm**: `master` (default)
 - **Client ID**: `edu-portal-client`
 
+## Running on Emulator (For Demo)
+
+**Option 1: Android Emulator 
+```bash
+# Check if Android emulator is set up
+npm run emulator:check-android
+
+# Start Android emulator
+npm run emulator:start-android
+
+# In another terminal, start Keycloak and Expo
+npm run keycloak:start
+npm run android
+```
+
+**Option 2: iOS Simulator (Mac only)**
+```bash
+# Check if iOS simulator is set up
+npm run emulator:check-ios
+
+# Start iOS simulator
+npm run emulator:start-ios
+
+# In another terminal, start Keycloak and Expo
+npm run keycloak:start
+npm run ios
+```
+
+**One-Command Demo (Android)**
+```bash
+npm run demo:android
+```
+
+**One-Command Demo (iOS)**
+```bash
+npm run demo:ios
+```
+
+### Emulator Setup
+
+See **[EMULATOR_SETUP.md](./EMULATOR_SETUP.md)** for detailed setup instructions.
+
+**Quick Setup:**
+1. **Android**: Install [Android Studio](https://developer.android.com/studio) → Create AVD → Done
+2. **iOS**: Install Xcode from Mac App Store → Done
+
+### Important Notes
+
+- **Android emulator** automatically uses `10.0.2.2` to access your host machine's localhost (Keycloak)
+- **iOS Simulator** can use `localhost` directly
+- Make sure Keycloak is running before starting the app
+- Wait for the emulator to fully boot before running the app
+
 ## Get a fresh project
 
 When you're ready, run:

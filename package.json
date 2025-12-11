@@ -12,7 +12,15 @@
     "keycloak:start": "docker-compose up -d keycloak",
     "keycloak:stop": "docker-compose stop keycloak",
     "keycloak:logs": "docker-compose logs -f keycloak",
-    "keycloak:restart": "docker-compose restart keycloak"
+    "keycloak:restart": "docker-compose restart keycloak",
+    "emulator:check": "bash scripts/emulator-check.sh",
+    "emulator:check-android": "bash scripts/emulator-check.sh android",
+    "emulator:check-ios": "bash scripts/emulator-check.sh ios",
+    "emulator:start": "bash scripts/emulator-start.sh",
+    "emulator:start-android": "bash scripts/emulator-start.sh android",
+    "emulator:start-ios": "bash scripts/emulator-start.sh ios",
+    "demo:android": "npm run keycloak:start && sleep 5 && npm run emulator:start-android && npm run android",
+    "demo:ios": "npm run keycloak:start && sleep 5 && npm run emulator:start-ios && npm run ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

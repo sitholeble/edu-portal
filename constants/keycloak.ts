@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 /**
  * Keycloak OAuth Configuration
  * 
- * TODO: replace hardcoded computer's IP address instead of localhost for mobile devices, 
+ * For Android emulator: Uses 10.0.2.2 to access host machine's localhost
+ * For iOS simulator: Can use localhost directly
+ * For physical devices: Use computer's IP address (e.g., 192.168.1.54)
  */
 
 const KEYCLOAK_HOST_IP = process.env.EXPO_PUBLIC_KEYCLOAK_HOST_IP || '192.168.1.54';
@@ -18,8 +20,15 @@ const getKeycloakBaseUrl = () => {
   // Use IP address for native platforms (iOS/Android), localhost for web
   if (Platform.OS === 'web') {
     return `http://localhost:${KEYCLOAK_PORT}`;
+  } else if (Platform.OS === 'android') {
+    // Android emulator uses 10.0.2.2 to access host machine's localhost
+    // For physical Android devices, use your computer's IP address
+    // Override with EXPO_PUBLIC_KEYCLOAK_HOST_IP environment variable
+    const hostIP = process.env.EXPO_PUBLIC_KEYCLOAK_HOST_IP || '10.0.2.2';
+    return `http://${hostIP}:${KEYCLOAK_PORT}`;
   } else {
-    return `http://${KEYCLOAK_HOST_IP}:${KEYCLOAK_PORT}`;
+    // iOS simulator can use localhost, but for physical devices use IP
+    return `http://localhost:${KEYCLOAK_PORT}`;
   }
 };
 
