@@ -12,6 +12,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { MultiSelect, SelectOption } from '@/components/ui';
 import { FamilyMember, useFamily } from '@/contexts/FamilyContext';
 
 export default function FamilyScreen() {
@@ -22,6 +23,8 @@ export default function FamilyScreen() {
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [age, setAge] = useState('');
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [filterRelationship, setFilterRelationship] = useState<string[]>([]);
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -88,6 +91,44 @@ export default function FamilyScreen() {
     );
   };
 
+  const handleBulkDelete = () => {
+    if (selectedMemberIds.length === 0) return;
+    
+    Alert.alert(
+      'Delete Selected Members',
+      `Are you sure you want to delete ${selectedMemberIds.length} family member(s)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            for (const id of selectedMemberIds) {
+              await deleteFamilyMember(id);
+            }
+            setSelectedMemberIds([]);
+          },
+        },
+      ]
+    );
+  };
+
+  const relationshipOptions: SelectOption[] = [
+    { label: 'All', value: 'all' },
+    { label: 'Parent', value: 'Parent' },
+    { label: 'Child', value: 'Child' },
+    { label: 'Sibling', value: 'Sibling' },
+    { label: 'Spouse', value: 'Spouse' },
+    { label: 'Other', value: 'Other' },
+  ];
+
+  const filteredMembers = familyMembers.filter((member) => {
+    if (filterRelationship.length === 0 || filterRelationship.includes('all')) {
+      return true;
+    }
+    return filterRelationship.includes(member.relationship);
+  });
+
   const renderMember = ({ item }: { item: FamilyMember }) => {
     if (editingId === item.id) {
       return (
@@ -153,6 +194,50 @@ export default function FamilyScreen() {
         <ThemedText style={styles.subtitle}>
           Manage your family members and their information
         </ThemedText>
+        
+        {/* Filter by Relationship */}
+        <View style={styles.filterContainer}>
+          <MultiSelect
+            label="Filter by Relationship"
+            options={relationshipOptions}
+            selectedValues={filterRelationship}
+            onSelectionChange={(values) => {
+              setFilterRelationship(values as string[]);
+            }}
+            placeholder="All relationships"
+            searchPlaceholder="Search relationships..."
+            maxHeight={200}
+          />
+        </View>
+
+        {/* Bulk Selection */}
+        {filteredMembers.length > 0 && (
+          <View style={styles.bulkActionsContainer}>
+            <MultiSelect
+              label="Select Members for Bulk Actions"
+              options={filteredMembers.map((member) => ({
+                label: `${member.name} (${member.relationship})`,
+                value: member.id,
+              }))}
+              selectedValues={selectedMemberIds}
+              onSelectionChange={(values) => {
+                setSelectedMemberIds(values as string[]);
+              }}
+              placeholder="Select members..."
+              searchPlaceholder="Search members..."
+              maxHeight={200}
+            />
+            {selectedMemberIds.length > 0 && (
+              <View style={styles.bulkActions}>
+                <Button
+                  title={`Delete Selected (${selectedMemberIds.length})`}
+                  onPress={handleBulkDelete}
+                  color="#dc3545"
+                />
+              </View>
+            )}
+          </View>
+        )}
       </ThemedView>
 
       {isAdding && (
@@ -187,15 +272,21 @@ export default function FamilyScreen() {
       )}
 
       <FlatList
-        data={familyMembers}
+        data={filteredMembers}
         renderItem={renderMember}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <ThemedView style={styles.emptyState}>
-            <ThemedText style={styles.emptyText}>No family members yet</ThemedText>
+            <ThemedText style={styles.emptyText}>
+              {filterRelationship.length > 0 && !filterRelationship.includes('all')
+                ? 'No family members found with selected relationship'
+                : 'No family members yet'}
+            </ThemedText>
             <ThemedText style={styles.emptySubtext}>
-              Add your first family member to get started
+              {filterRelationship.length > 0 && !filterRelationship.includes('all')
+                ? 'Try selecting a different relationship filter'
+                : 'Add your first family member to get started'}
             </ThemedText>
           </ThemedView>
         }
@@ -222,6 +313,18 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 4,
     opacity: 0.7,
+    marginBottom: 16,
+  },
+  filterContainer: {
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  bulkActionsContainer: {
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  bulkActions: {
+    marginTop: 12,
   },
   list: {
     padding: 20,

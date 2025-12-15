@@ -3,4 +3,5 @@ export { Button, type ButtonProps, type ButtonSize, type ButtonVariant } from '.
 export { Card, type CardProps } from './card';
 export { Input, type InputProps } from './input';
 export { Modal, type ModalProps, type ModalSize } from './modal';
+export { MultiSelect, type MultiSelectProps, type SelectOption } from './multi-select';
 

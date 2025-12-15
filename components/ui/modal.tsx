@@ -31,16 +31,16 @@ export function Modal({
 }: ModalProps) {
   const backgroundColor = useThemeColor({}, 'background');
 
-  const getSizeStyles = () => {
+  const getSizeStyles = (): View['props']['style'] => {
     switch (size) {
       case 'small':
-        return { width: '80%', maxWidth: 300 };
+        return { width: '80%' as const, maxWidth: 300 };
       case 'medium':
-        return { width: '90%', maxWidth: 500 };
+        return { width: '90%' as const, maxWidth: 500 };
       case 'large':
-        return { width: '95%', maxWidth: 700 };
+        return { width: '95%' as const, maxWidth: 700 };
       case 'fullscreen':
-        return { width: '100%', height: '100%' };
+        return { width: '100%' as const, height: '100%' as const };
       default:
         return {};
     }

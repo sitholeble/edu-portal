@@ -14,6 +14,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { MultiSelect } from '@/components/ui';
 import { CalendarEvent, useCalendar } from '@/contexts/CalendarContext';
 import { useFamily } from '@/contexts/FamilyContext';
 
@@ -35,7 +36,7 @@ export default function CalendarScreen() {
     endDate: '',
     startTime: '',
     endTime: '',
-    familyMemberId: '',
+    familyMemberIds: [] as string[],
     category: '',
     location: '',
   });
@@ -48,7 +49,7 @@ export default function CalendarScreen() {
       endDate: '',
       startTime: '',
       endTime: '',
-      familyMemberId: '',
+      familyMemberIds: [],
       category: '',
       location: '',
     });
@@ -69,7 +70,7 @@ export default function CalendarScreen() {
       endDate: event.endDate?.split('T')[0] || '',
       startTime: event.startTime || '',
       endTime: event.endTime || '',
-      familyMemberId: event.familyMemberId || '',
+      familyMemberIds: event.familyMemberId ? [event.familyMemberId] : [],
       category: event.category || '',
       location: event.location || '',
     });
@@ -102,7 +103,7 @@ export default function CalendarScreen() {
       endDate: formData.endDate ? formatDateForSave(formData.endDate, formData.endTime) : undefined,
       startTime: formData.startTime || undefined,
       endTime: formData.endTime || undefined,
-      familyMemberId: formData.familyMemberId || undefined,
+      familyMemberId: formData.familyMemberIds.length > 0 ? formData.familyMemberIds[0] : undefined,
       category: formData.category || undefined,
       location: formData.location || undefined,
     };
@@ -172,6 +173,9 @@ export default function CalendarScreen() {
     const familyMember = item.familyMemberId
       ? familyMembers.find((m) => m.id === item.familyMemberId)
       : null;
+    const selectedFamilyMembers = item.familyMemberId
+      ? familyMembers.filter((m) => m.id === item.familyMemberId)
+      : [];
 
     return (
       <ThemedView style={styles.eventCard}>
@@ -201,8 +205,10 @@ export default function CalendarScreen() {
         {item.description && (
           <ThemedText style={styles.eventDescription}>{item.description}</ThemedText>
         )}
-        {familyMember && (
-          <ThemedText style={styles.eventMember}>👤 {familyMember.name}</ThemedText>
+        {selectedFamilyMembers.length > 0 && (
+          <ThemedText style={styles.eventMember}>
+            👤 {selectedFamilyMembers.map((m) => m.name).join(', ')}
+          </ThemedText>
         )}
         {item.category && (
           <ThemedText style={styles.eventCategory}>🏷️ {item.category}</ThemedText>
@@ -430,25 +436,19 @@ export default function CalendarScreen() {
                 placeholderTextColor="#999"
               />
 
-              <ThemedText style={styles.label}>Family Member</ThemedText>
-              <View style={styles.picker}>
-                <Button
-                  title={formData.familyMemberId ? familyMembers.find((m) => m.id === formData.familyMemberId)?.name || 'Select' : 'Select Family Member'}
-                  onPress={() => {
-                    // Simple selection - in a real app, use a proper picker
-                    if (familyMembers.length > 0) {
-                      const index = familyMembers.findIndex((m) => m.id === formData.familyMemberId);
-                      const nextIndex = (index + 1) % (familyMembers.length + 1);
-                      if (nextIndex === 0) {
-                        setFormData({ ...formData, familyMemberId: '' });
-                      } else {
-                        setFormData({ ...formData, familyMemberId: familyMembers[nextIndex - 1].id });
-                      }
-                    }
-                  }}
-                  color="#888"
-                />
-              </View>
+              <MultiSelect
+                label="Family Members"
+                options={familyMembers.map((member) => ({
+                  label: `${member.name} (${member.relationship})`,
+                  value: member.id,
+                }))}
+                selectedValues={formData.familyMemberIds}
+                onSelectionChange={(selectedIds) => {
+                  setFormData({ ...formData, familyMemberIds: selectedIds as string[] });
+                }}
+                placeholder="Select family members..."
+                searchPlaceholder="Search family members..."
+              />
 
               <ThemedText style={styles.label}>Category</ThemedText>
               <TextInput
