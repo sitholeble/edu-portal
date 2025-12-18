@@ -1,25 +1,32 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useFamily } from '@/contexts/FamilyContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useFamilyStore } from '@/stores';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { completeOnboarding } = useOnboarding();
-  const { addFamilyMember, familyMembers } = useFamily();
+  const members = useFamilyStore((state) => state.members);
+  const addMember = useFamilyStore((state) => state.addMember);
+  const loadMembers = useFamilyStore((state) => state.loadMembers);
   const [currentStep, setCurrentStep] = useState(0);
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [age, setAge] = useState('');
 
+  // Load members on mount
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
   const steps = [
     {
       title: 'Welcome to Edu Portal!',
-      description: 'Let\'s set up your family profile to get started.',
+      description: "Let's set up your family profile to get started.",
       component: (
         <View style={styles.stepContent}>
           <ThemedText style={styles.description}>
@@ -62,7 +69,7 @@ export default function OnboardingScreen() {
             title="Add Member"
             onPress={async () => {
               if (name && relationship) {
-                await addFamilyMember({
+                await addMember({
                   name,
                   relationship,
                   age: age ? parseInt(age, 10) : undefined,
@@ -74,12 +81,12 @@ export default function OnboardingScreen() {
             }}
             disabled={!name || !relationship}
           />
-          {familyMembers.length > 0 && (
+          {members.length > 0 && (
             <View style={styles.membersList}>
               <ThemedText type="subtitle" style={styles.membersTitle}>
-                Family Members ({familyMembers.length})
+                Family Members ({members.length})
               </ThemedText>
-              {familyMembers.map((member) => (
+              {members.map((member) => (
                 <View key={member.id} style={styles.memberItem}>
                   <ThemedText>{member.name}</ThemedText>
                   <ThemedText style={styles.memberRelationship}>{member.relationship}</ThemedText>
@@ -92,7 +99,7 @@ export default function OnboardingScreen() {
       ),
     },
     {
-      title: 'You\'re All Set!',
+      title: "You're All Set!",
       description: 'Your family profile is ready. Let\'s start managing your calendar.',
       component: (
         <View style={styles.stepContent}>
@@ -157,7 +164,7 @@ export default function OnboardingScreen() {
         <Button
           title={currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
           onPress={handleNext}
-          disabled={currentStep === 1 && familyMembers.length === 0}
+          disabled={currentStep === 1 && members.length === 0}
         />
       </View>
     </ThemedView>

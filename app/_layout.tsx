@@ -5,8 +5,6 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { CalendarProvider } from '@/contexts/CalendarContext';
-import { FamilyProvider } from '@/contexts/FamilyContext';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -60,11 +58,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <FamilyProvider>
-          <CalendarProvider>
-            <RootLayoutNav />
-          </CalendarProvider>
-        </FamilyProvider>
+        <RootLayoutNav />
       </OnboardingProvider>
     </AuthProvider>
   );

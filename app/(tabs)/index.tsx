@@ -7,11 +7,11 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useFamilyStore } from '@/stores';
 
 export default function HomeScreen() {
   const { user, logout, isAuthenticated } = useAuth();
-  const { familyMembers } = useFamily();
+  const familyMembers = useFamilyStore((state) => state.members);
   const router = useRouter();
 
   useEffect(() => {

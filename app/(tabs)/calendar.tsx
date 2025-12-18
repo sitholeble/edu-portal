@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
     Button,
@@ -15,20 +15,29 @@ import {
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MultiSelect } from '@/components/ui';
-import { CalendarEvent, useCalendar } from '@/contexts/CalendarContext';
-import { useFamily } from '@/contexts/FamilyContext';
+import { useCalendarStore, useFamilyStore, type CalendarEvent } from '@/stores';
 
 type ViewMode = 'list' | 'daily' | 'weekly';
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { events, addEvent, updateEvent, deleteEvent, getDailySummary, getWeeklySummary } =
-    useCalendar();
-  const { familyMembers } = useFamily();
+  const events = useCalendarStore((state) => state.events);
+  const addEvent = useCalendarStore((state) => state.addEvent);
+  const updateEvent = useCalendarStore((state) => state.updateEvent);
+  const deleteEvent = useCalendarStore((state) => state.deleteEvent);
+  const getDailySummary = useCalendarStore((state) => state.getDailySummary);
+  const getWeeklySummary = useCalendarStore((state) => state.getWeeklySummary);
+  const loadEvents = useCalendarStore((state) => state.loadEvents);
+  const familyMembers = useFamilyStore((state) => state.members);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+
+  // Load events on mount
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -207,7 +216,7 @@ export default function CalendarScreen() {
         )}
         {selectedFamilyMembers.length > 0 && (
           <ThemedText style={styles.eventMember}>
-            👤 {selectedFamilyMembers.map((m) => m.name).join(', ')}
+            👤 {selectedFamilyMembers.map((m: { name: string }) => m.name).join(', ')}
           </ThemedText>
         )}
         {item.category && (
@@ -234,7 +243,7 @@ export default function CalendarScreen() {
           <FlatList
             data={summary.events}
             renderItem={renderEvent}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item: CalendarEvent) => item.id}
             contentContainerStyle={styles.list}
           />
         ) : (
@@ -438,7 +447,7 @@ export default function CalendarScreen() {
 
               <MultiSelect
                 label="Family Members"
-                options={familyMembers.map((member) => ({
+                options={familyMembers.map((member: { name: string; relationship: string; id: string }) => ({
                   label: `${member.name} (${member.relationship})`,
                   value: member.id,
                 }))}

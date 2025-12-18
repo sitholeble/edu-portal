@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
     Button,
@@ -13,11 +13,17 @@ import {
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MultiSelect, SelectOption } from '@/components/ui';
-import { FamilyMember, useFamily } from '@/contexts/FamilyContext';
+import { useFamilyStore, type FamilyMember } from '@/stores';
 
 export default function FamilyScreen() {
   const router = useRouter();
-  const { familyMembers, addFamilyMember, updateFamilyMember, deleteFamilyMember } = useFamily();
+  const familyMembers = useFamilyStore((state) => state.members);
+  const addFamilyMember = useFamilyStore((state) => state.addMember);
+  const updateFamilyMember = useFamilyStore((state) => state.updateMember);
+  const deleteFamilyMember = useFamilyStore((state) => state.deleteMember);
+  const loadMembers = useFamilyStore((state) => state.loadMembers);
+  const isLoading = useFamilyStore((state) => state.isLoading);
+  
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -25,6 +31,11 @@ export default function FamilyScreen() {
   const [age, setAge] = useState('');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [filterRelationship, setFilterRelationship] = useState<string[]>([]);
+
+  // Load members on mount
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -215,7 +226,7 @@ export default function FamilyScreen() {
           <View style={styles.bulkActionsContainer}>
             <MultiSelect
               label="Select Members for Bulk Actions"
-              options={filteredMembers.map((member) => ({
+              options={filteredMembers.map((member: FamilyMember) => ({
                 label: `${member.name} (${member.relationship})`,
                 value: member.id,
               }))}
