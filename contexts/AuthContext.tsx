@@ -56,7 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       
       const endpoints = getKeycloakEndpoints();
-      const redirectUri = AuthSession.makeRedirectUri();
+      let redirectUri = AuthSession.makeRedirectUri();
+      
+      if (redirectUri && redirectUri.endsWith('://') && !redirectUri.includes(':///')) {
+        redirectUri = redirectUri.replace('://', ':///');
+      }
+      
+      console.log('🔐 Generated redirect URI:', redirectUri);
+      console.log('🔐 Keycloak URL:', KeycloakConfig.KEYCLOAK_URL);
+      console.log('🔐 Client ID:', KeycloakConfig.CLIENT_ID);
 
       const request = new AuthSession.AuthRequest({
         clientId: KeycloakConfig.CLIENT_ID,
